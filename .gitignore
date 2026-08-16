@@ -184,3 +184,8 @@ sphinx_*/
 # Rust analyzer configuration
 /rust-project.json
 bsp/
+/bsp
+/boot-mainline/
+/edge-stage/
+/arch/arm64/boot/uImage
+/arch/arm64/boot/dts/allwinner/sun60iw-i-tmp.sedinput
