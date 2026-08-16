@@ -184,6 +184,7 @@ static const struct drm_driver ili9486_driver = {
 static const struct of_device_id ili9486_of_match[] = {
 	{ .compatible = "waveshare,rpi-lcd-35" },
 	{ .compatible = "ozzmaker,piscreen" },
+	{ .compatible = "iltek,ili9486" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ili9486_of_match);

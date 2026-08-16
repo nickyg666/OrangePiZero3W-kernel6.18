@@ -159,7 +159,10 @@ struct etnaviv_gpu {
 	struct clk *clk_reg;
 	struct clk *clk_core;
 	struct clk *clk_shader;
+	struct clk *clk_mbus;
 	struct reset_control *rst;
+	struct reset_control *arst;
+	struct reset_control *hrst;
 
 	unsigned int freq_scale;
 	unsigned int fe_waitcycles;

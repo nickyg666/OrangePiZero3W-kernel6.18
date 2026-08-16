@@ -606,7 +606,7 @@ int pvr_power_domains_init(struct pvr_device *pvr_dev)
 	domain_count = of_count_phandle_with_args(dev->of_node, "power-domains",
 						  "#power-domain-cells");
 	if (domain_count < 0)
-		return domain_count;
+		return 0;
 
 	if (domain_count <= 1)
 		return 0;

@@ -183,6 +183,12 @@ static int etnaviv_gpu_reset_deassert(struct etnaviv_gpu *gpu)
 	 */
 	usleep_range(1, 2);
 
+	ret = reset_control_deassert(gpu->hrst);
+	if (ret)
+		return ret;
+	ret = reset_control_deassert(gpu->arst);
+	if (ret)
+		return ret;
 	ret = reset_control_deassert(gpu->rst);
 	if (ret)
 		return ret;
@@ -1636,9 +1642,13 @@ static int etnaviv_gpu_clk_enable(struct etnaviv_gpu *gpu)
 	if (ret)
 		return ret;
 
-	ret = clk_prepare_enable(gpu->clk_bus);
+	ret = clk_prepare_enable(gpu->clk_mbus);
 	if (ret)
 		goto disable_clk_reg;
+
+	ret = clk_prepare_enable(gpu->clk_bus);
+	if (ret)
+		goto disable_clk_mbus;
 
 	ret = clk_prepare_enable(gpu->clk_core);
 	if (ret)
@@ -1654,6 +1664,8 @@ disable_clk_core:
 	clk_disable_unprepare(gpu->clk_core);
 disable_clk_bus:
 	clk_disable_unprepare(gpu->clk_bus);
+disable_clk_mbus:
+	clk_disable_unprepare(gpu->clk_mbus);
 disable_clk_reg:
 	clk_disable_unprepare(gpu->clk_reg);
 
@@ -1665,6 +1677,7 @@ static int etnaviv_gpu_clk_disable(struct etnaviv_gpu *gpu)
 	clk_disable_unprepare(gpu->clk_shader);
 	clk_disable_unprepare(gpu->clk_core);
 	clk_disable_unprepare(gpu->clk_bus);
+	clk_disable_unprepare(gpu->clk_mbus);
 	clk_disable_unprepare(gpu->clk_reg);
 
 	return 0;
@@ -1892,14 +1905,26 @@ static int etnaviv_gpu_platform_probe(struct platform_device *pdev)
 
 
 	/* Get Reset: */
-	gpu->rst = devm_reset_control_get_optional_exclusive(&pdev->dev, NULL);
+	gpu->rst = devm_reset_control_get_optional_exclusive(&pdev->dev, "core");
 	if (IS_ERR(gpu->rst))
 		return dev_err_probe(dev, PTR_ERR(gpu->rst),
+				     "failed to get reset\n");
+
+	gpu->arst = devm_reset_control_get_optional_exclusive(&pdev->dev, "axi");
+	if (IS_ERR(gpu->arst))
+		return dev_err_probe(dev, PTR_ERR(gpu->arst),
+				     "failed to get reset\n");
+
+	gpu->hrst = devm_reset_control_get_optional_exclusive(&pdev->dev, "ahb");
+	if (IS_ERR(gpu->hrst))
+		return dev_err_probe(dev, PTR_ERR(gpu->hrst),
 				     "failed to get reset\n");
 
 	err = reset_control_assert(gpu->rst);
 	if (err)
 		return dev_err_probe(dev, err, "failed to assert reset\n");
+	err = reset_control_assert(gpu->arst);
+	err = reset_control_assert(gpu->hrst);
 
 	/* Get Interrupt: */
 	gpu->irq = platform_get_irq(pdev, 0);
@@ -1918,6 +1943,11 @@ static int etnaviv_gpu_platform_probe(struct platform_device *pdev)
 	DBG("clk_reg: %p", gpu->clk_reg);
 	if (IS_ERR(gpu->clk_reg))
 		return PTR_ERR(gpu->clk_reg);
+
+	gpu->clk_mbus = devm_clk_get_optional(&pdev->dev, "mbus");
+	DBG("clk_mbus: %p", gpu->clk_mbus);
+	if (IS_ERR(gpu->clk_mbus))
+		return PTR_ERR(gpu->clk_mbus);
 
 	gpu->clk_bus = devm_clk_get_optional(&pdev->dev, "bus");
 	DBG("clk_bus: %p", gpu->clk_bus);

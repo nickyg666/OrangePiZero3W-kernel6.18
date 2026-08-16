@@ -14,13 +14,29 @@ static const struct drm_connector_funcs vkms_connector_funcs = {
 	.atomic_destroy_state = drm_atomic_helper_connector_destroy_state,
 };
 
+static int vkms_add_mode_960x640(struct drm_connector *connector)
+{
+	struct drm_display_mode *mode;
+
+	mode = drm_cvt_mode(connector->dev, 960, 640, 60, false, false, false);
+	if (!mode)
+		return -ENOMEM;
+
+	drm_mode_set_name(mode);
+	mode->type |= DRM_MODE_TYPE_PREFERRED;
+	drm_mode_probed_add(connector, mode);
+	return 0;
+}
+
 static int vkms_conn_get_modes(struct drm_connector *connector)
 {
 	int count;
 
 	/* Use the default modes list from DRM */
 	count = drm_add_modes_noedid(connector, XRES_MAX, YRES_MAX);
-	drm_set_preferred_mode(connector, XRES_DEF, YRES_DEF);
+	if (vkms_add_mode_960x640(connector) == 0)
+		count++;
+	drm_set_preferred_mode(connector, 960, 640);
 
 	return count;
 }
