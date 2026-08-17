@@ -1673,19 +1673,10 @@
 	status = "okay";
 };
 
-#ifdef TYPEC_DP
-// &usbc0 {
-// 	usb-role-switch;
-// 	port {
-// 		#address-cells = <1>;
-// 		#size-cells = <0>;
-// 		usbc0_role_switch: endpoint@0 {
-// 			reg = <0>;
-// 			remote-endpoint = <&usbc0_role_sw>;
-// 		};
-// 	};
-// };
-#endif
+&usbc0 {
+	/* OTG role-switch not wired: fusb302 TCPC only exposes usbc2_role_sw endpoint;
+	 * host-mode VBUS supplied via drvvbus-supply on ehci0/ohci0 below. */
+};
 
 /*
  * usb_port_type: usb mode. 0-device, 1-host, 2-otg.
@@ -1726,13 +1717,13 @@
 
 &ehci0 {
 	phy_range = <0x188>;
-	//drvvbus-supply = <&reg_usb0_vbus>;
+	drvvbus-supply = <&reg_usb0_vbus>;
 	status = "okay";
 };
 
 &ohci0 {
 	phy_range = <0x188>;
-	//drvvbus-supply = <&reg_usb0_vbus>;
+	drvvbus-supply = <&reg_usb0_vbus>;
 	status = "okay";
 };
 
@@ -1745,13 +1736,13 @@
 };
 
 &ehci1 {
-	//drvvbus-supply = <&reg_usb0_vbus>;
+	drvvbus-supply = <&reg_usb0_vbus>;
 	phy_range = <0x188>;
 	status = "okay";
 };
 
 &ohci1 {
-	//drvvbus-supply = <&reg_usb0_vbus>;
+	drvvbus-supply = <&reg_usb0_vbus>;
 	phy_range = <0x188>;
 	status = "okay";
 };
@@ -2707,7 +2698,7 @@
 		rglt1-mode      = "PMU";
 		rglt1-voltage   = <1800000>;
 		rglt1-supply    = <&reg_bldo4>;
-		status                  = "disabled";
+		status                  = "okay";
 	};
 };
 
